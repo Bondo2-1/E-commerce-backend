@@ -1,5 +1,11 @@
 import { Router } from "express";
 import {
+  getCategoryValidator,
+  createCategoryValidator,
+  updateCategoryValidator,
+  deleteCategoryValidator,
+} from "../utils/validators/categoryValidator.js";
+import {
   getCategories,
   createCategory,
   getCategoryById,
@@ -8,10 +14,13 @@ import {
 } from "../services/categoryService.js";
 const router = Router();
 
-router.route("/categories").get(getCategories).post(createCategory);
+router
+  .route("/categories")
+  .get(getCategories)
+  .post(createCategoryValidator, createCategory);
 router
   .route("/categoryID=/:id")
-  .get(getCategoryById)
-  .put(updateCategory)
-  .delete(deleteCategory);
+  .get(getCategoryValidator, getCategoryById)
+  .put(updateCategoryValidator, updateCategory)
+  .delete(deleteCategoryValidator, deleteCategory);
 export default router;

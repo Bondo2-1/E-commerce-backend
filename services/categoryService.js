@@ -2,7 +2,8 @@
 import CategoryModel from "../models/categoryModel.js";
 import slugify from "slugify";
 import expressAsyncHandler from "express-async-handler";
-
+import ApiError from "../utils/ApiError.js";
+import mongoose from "mongoose";
 //@desc    Get all categories with pagination
 export const getCategories = expressAsyncHandler(async (req, res) => {
   //code of pagination
@@ -16,12 +17,12 @@ export const getCategories = expressAsyncHandler(async (req, res) => {
 });
 
 // @desc   Get a single category by id
-export const getCategoryById = expressAsyncHandler(async (req, res) => {
+export const getCategoryById = expressAsyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const foundCategory = await CategoryModel.findById(id);
-  if (!foundCategory) {
-    res.status(404).json({ message: `Category with id ${id} not found` });
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ApiError(`Category with id ${id} not found`, 404));
   }
+  const foundCategory = await CategoryModel.findById(id);
   res.status(200).json({ data: foundCategory });
 });
 
@@ -37,9 +38,12 @@ export const createCategory = expressAsyncHandler(async (req, res) => {
 });
 
 //@desc    Update a category
-export const updateCategory = expressAsyncHandler(async (req, res) => {
+export const updateCategory = expressAsyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { name } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ApiError(`Category with id ${id} not found`, 404));
+  }
   const updatedCategory = await CategoryModel.findByIdAndUpdate(
     id,
     {
@@ -48,20 +52,15 @@ export const updateCategory = expressAsyncHandler(async (req, res) => {
     },
     { new: true }
   );
-  if (!updatedCategory) {
-    res.status(404).json({ message: `Category with id ${id} not found` });
-  } else {
-    res.status(200).json({ data: updatedCategory });
-  }
+  res.status(200).json({ data: updatedCategory });
 });
 
 //@desc    Delete a category
-export const deleteCategory = expressAsyncHandler(async (req, res) => {
+export const deleteCategory = expressAsyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const deletedCategory = await CategoryModel.findByIdAndDelete(id);
-  if (!deletedCategory) {
-    res.status(404).json({ message: `Category with id ${id} not found` });
-  } else {
-    res.status(204).send(); // No content to send back
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new ApiError(`Category with id ${id} not found`, 404));
   }
+  const deletedCategory = await CategoryModel.findByIdAndDelete(id);
+  res.status(204).send(); // No content to send back
 });
